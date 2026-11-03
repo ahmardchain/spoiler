@@ -9,7 +9,7 @@ Then the traps start reading it too. The stalker slams down where the window say
 ## Play
 **Live: https://ahmardchain.github.io/spoiler/**
 
-- **Move:** arrows / WASD. **Jump:** Space / Up / Z (hold to bounce). **R** restart, **Esc** level select, **M** mute. Touch buttons appear on phones.
+- **Move:** arrows / WASD. **Jump:** Space / Up / Z (hold to bounce). **R** restart, **Esc** level select, **M** mute, **F** fullscreen (or the fullscreen button). The game fills the whole window, pixel-crisp at any size or phone orientation. Touch buttons appear on phones.
 - 14 single-screen levels, 5-15 seconds each, instant respawn, progress saved in `localStorage`.
 
 ## How it works

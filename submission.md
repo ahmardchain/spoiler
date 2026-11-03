@@ -2,7 +2,7 @@
 
 Live game: https://ahmardchain.github.io/spoiler/
 Repo: https://github.com/ahmardchain/spoiler
-Clip: clip/spoiler-clip.mp4 (26 s, 1280x720; scripted/bot-driven inputs, real game rendering)
+Clip: clip/spoiler-clip.mp4 (26 s, 1920x1080; scripted/bot-driven inputs, real game rendering)
 
 > Before submitting: re-read the official Loadout rules/entry form (the rules page was behind a Vercel checkpoint during research) and confirm deadline (Fri 6 Nov 2026, 15:00 UTC = 16:00 Lagos), required fields, and whether a hosted URL, repo, video and/or X post are required.
 

@@ -118,7 +118,9 @@ export function drawWorld(g: CanvasRenderingContext2D, L: Compiled, s: State, o:
 
 export function text(g: CanvasRenderingContext2D, str: string, x: number, y: number, size = 8, color = '#fff', align: CanvasTextAlign = 'left', shadow = '#14102a') {
   g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
-  if (shadow) { g.fillStyle = shadow; g.fillText(str, x + 1, y + 1); }
+  // strong contrast: dark outline on every label, plus an optional coloured drop-shadow
+  g.lineJoin = 'round'; g.lineWidth = Math.max(2, size * 0.24); g.strokeStyle = '#0c0820'; g.strokeText(str, x, y);
+  if (shadow && shadow !== '#14102a') { const d = Math.max(1, size * 0.09); g.fillStyle = shadow; g.fillText(str, x + d, y + d); }
   g.fillStyle = color; g.fillText(str, x, y);
 }
 export { tile as drawTile, sprites, heroImg };

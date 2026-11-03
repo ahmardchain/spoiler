@@ -9,6 +9,7 @@ import { compile, initState, step, predict } from './sim';
 async function boot() {
   await loadAssets();
   const canvas = document.getElementById('c') as HTMLCanvasElement;
+  if (matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).has('touch')) document.body.classList.add('touch');
   const game = new Game(canvas);
   initInput(code => game.onKey(code));
   document.getElementById('loading')?.remove();
@@ -16,7 +17,6 @@ async function boot() {
   audio.playMusic('title');
   if (q.has('level')) game.startLevel(+q.get('level')! - 1);
   if (q.has('select')) game.toSelect();
-  if (matchMedia('(pointer: coarse)').matches || q.has('touch')) document.body.classList.add('touch');
   game.start();
   // Hooks for the Playwright demo recorder and for debugging.
   (window as any).__spoiler = {

@@ -1,10 +1,10 @@
-// Records a 1280x720 gameplay clip. Inputs are scripted (solver-bot output + deliberate mistakes); the game, sim and renderer are the real thing.
+// Records a 1920x1080 gameplay clip. Inputs are scripted (solver-bot output + deliberate mistakes); the game, sim and renderer are the real thing.
 import { chromium } from 'playwright'; import fs from 'node:fs';
 const sols = JSON.parse(fs.readFileSync('src/solutions.json', 'utf8'));
 const url = process.argv[2] || 'http://127.0.0.1:4173/';
 const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required'] });
 const T0 = Date.now();
-const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: 'clip/raw', size: { width: 1280, height: 720 } } });
+const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, recordVideo: { dir: 'clip/raw', size: { width: 1920, height: 1080 } } });
 const p = await ctx.newPage();
 await p.goto(url + '?level=1'); await p.waitForTimeout(1000);
 const play = (n, rle) => p.evaluate(async ([n, rle]) => {
