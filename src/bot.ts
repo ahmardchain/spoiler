@@ -31,7 +31,7 @@ export function solve(def: LevelDef, opt: { beam?: number; maxTicks?: number } =
   type Node = { s: State; h: number; parent: Node | null; a: number };
   const heur = (s: State) => {
     const c = Math.max(0, Math.min(COLS - 1, ((s.x + HW / 2) / T) | 0)), r = Math.max(0, Math.min(ROWS - 1, ((s.y + HH / 2) / T) | 0));
-    return maps[s.dIdx][r * COLS + c] * 10 + 0;
+    return maps[s.dIdx][r * COLS + c] * 10 - s.dIdx * 600;
   };
   let layer: Node[] = [{ s: initState(L), h: 0, parent: null, a: 0 }];
   for (let li = 0; li < maxLayers; li++) {

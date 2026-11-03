@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SPOILER — see your death before it happens</title>
-<meta name="description" content="A troll-platformer where a live window shows your next 1.5 seconds. Made for the Loadout AI Game Competition.">
-<meta property="og:title" content="SPOILER"><meta property="og:description" content="See your death before it happens. 14 levels. A live window shows the next 1.5 seconds.">
+<title>SPOILER</title>
+<meta name="description" content="A tiny, brutal troll-platformer. 14 levels. Nothing is what it seems.">
+<meta property="og:title" content="SPOILER"><meta property="og:description" content="A tiny, brutal troll-platformer. 14 levels. Nothing is what it seems.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23120d24'/><rect x='3' y='3' width='10' height='10' fill='%233ddc84'/></svg>">
 <link rel="preload" href="./assets/PressStart2P-Regular.ttf" as="font" type="font/ttf" crossorigin>
 <style>
@@ -13,10 +13,10 @@
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0b0818; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-family: 'Press Start 2P', monospace; }
 #c { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; border: 0; margin: 0; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; background: #120d24; }
 #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; background: #120d24; z-index: 9; }
-.btn { position: fixed; display: none; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 16px; background: rgba(45,34,96,.88); border: 3px solid #7a64e0; color: #fff; font-family: inherit; touch-action: none; z-index: 5; text-shadow: 0 2px 0 #0c0820; cursor: pointer; padding: 0; }
-.btn.on { background: #6a56d8; }
-#b-jump { background: rgba(90,32,96,.9); border-color: #e068e0; } #b-jump.on { background: #c050c0; }
-.btn.small { border-radius: 10px; border-width: 2px; background: rgba(27,20,56,.9); }
+.btn { position: fixed; display: none; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 18px; background: rgba(40,30,90,.42); border: 3px solid rgba(255,255,255,.38); color: #fff; font-family: inherit; touch-action: none; z-index: 5; text-shadow: 0 2px 0 #0c0820; cursor: pointer; padding: 0; }
+.btn.on { background: rgba(120,100,240,.72); }
+#b-jump { background: rgba(110,36,110,.42); border-color: rgba(255,170,255,.45); } #b-jump.on { background: rgba(210,90,210,.72); }
+.btn.small { border-radius: 10px; border-width: 2px; background: rgba(20,14,44,.4); border-color: rgba(255,255,255,.3); opacity: .75; } .btn.small:hover { opacity: 1; }
 .btn svg { width: 62%; height: 62%; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: square; }
 </style>
 </head>

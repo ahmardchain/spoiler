@@ -1,9 +1,8 @@
-// SPOILER — deterministic fixed-step simulation (no DOM, shared by the game, the solver bot and the tests).
+// Deterministic fixed-step simulation (no DOM, shared by the game, the solver bot and the tests).
 export const T = 18, COLS = 32, ROWS = 18, W = COLS * T, H = ROWS * T;
 export const LEFT = 1, RIGHT = 2, JUMP = 4;
 export const HW = 10, HH = 14;           // hero hitbox
-export const HORIZON = 90;               // ticks of future shown in the SPOILER window (1.5 s @ 60 Hz)
-export const GHOST_EVERY = 6;            // reactive traps "look at your future" every 6 ticks
+export const STALK_SPEED = 1.9, STALK_NEAR = 40, STALK_TICKS = 12, STALK_LEAD = 14;
 const RUN = 1.75, ACC_G = 0.24, ACC_A = 0.16, FRIC_G = 0.32, FRIC_A = 0.07, GRAV = 0.23, JUMP_V = 4.4, MAXFALL = 6.2, COYOTE = 5;
 
 export type TrapDef =
@@ -15,20 +14,19 @@ export type TrapDef =
   | { k: 'stalker'; c: number; r: number; c0: number; c1: number }
   | { k: 'shy'; alts: [number, number][] };
 
-export interface LevelDef { name: string; tip: string; map: string[]; traps: TrapDef[]; }
+export interface LevelDef { name: string; map: string[]; traps: TrapDef[]; }
 
 export interface Compiled {
   def: LevelDef; solid: Uint8Array;
   spikes: { x: number; y: number; w: number; h: number }[];
   sx: number; sy: number; door: [number, number][];
-  reactive: boolean;
 }
 
 export interface TS { x: number; y: number; vy: number; m: number; t: number; n: number }
 export interface State {
   tick: number; x: number; y: number; vx: number; vy: number; ground: boolean; coy: number; face: number; lastJump: number;
   dead: boolean; cause: string; won: boolean; endTick: number;
-  ts: TS[]; gx: number; gy: number; dIdx: number; dLock: number; dCool: number; frozen: boolean;
+  ts: TS[]; dIdx: number; dLock: number; dCool: number;
 }
 
 export function compile(def: LevelDef): Compiled {
@@ -48,8 +46,7 @@ export function compile(def: LevelDef): Compiled {
   });
   const shy = def.traps.find(t => t.k === 'shy') as Extract<TrapDef, { k: 'shy' }> | undefined;
   if (shy) door = [door[0], ...shy.alts];
-  const reactive = def.traps.some(t => t.k === 'stalker' || t.k === 'shy');
-  return { def, solid, spikes, sx, sy, door, reactive };
+  return { def, solid, spikes, sx, sy, door };
 }
 
 export function initState(L: Compiled): State {
@@ -58,7 +55,7 @@ export function initState(L: Compiled): State {
     if (d.k === 'stalker') return { x: d.c * T + 9, y: d.r * T + 8, vy: 0, m: 0, t: 0, n: 0 };
     return { x: 0, y: 0, vy: 0, m: 0, t: 0, n: 0 };
   });
-  return { tick: 0, x: L.sx, y: L.sy, vx: 0, vy: 0, ground: true, coy: COYOTE, face: 1, lastJump: -99, dead: false, cause: '', won: false, endTick: 0, ts, gx: L.sx + HW / 2, gy: L.sy + HH / 2, dIdx: 0, dLock: 0, dCool: 0, frozen: false };
+  return { tick: 0, x: L.sx, y: L.sy, vx: 0, vy: 0, ground: true, coy: COYOTE, face: 1, lastJump: -99, dead: false, cause: '', won: false, endTick: 0, ts, dIdx: 0, dLock: 0, dCool: 0 };
 }
 
 export function clone(s: State): State {
@@ -104,37 +101,19 @@ function groundBelow(L: Compiled, x: number, from: number): number {
 
 export type Ev = string[] | undefined;
 
-export interface Pred { s: State; path: number[] | null; res: 0 | 1 | 2; t: number }
-
-export function predict(L: Compiled, s0: State, inp: number, live: boolean, wantPath: boolean): Pred {
-  const s = clone(s0); s.frozen = !live;
-  const path: number[] | null = wantPath ? [s.x + HW / 2, s.y + HH / 2] : null;
-  let i = 0;
-  for (; i < HORIZON; i++) {
-    step(L, s, inp);
-    if (path && (i % 3 === 2 || s.dead || s.won)) path.push(s.x + HW / 2, s.y + HH / 2);
-    if (s.dead || s.won) { i++; break; }
-  }
-  return { s, path, res: s.dead ? 1 : s.won ? 2 : 0, t: i };
-}
-
-function refreshGhost(L: Compiled, s: State, inp: number, ev: Ev) {
-  const p = predict(L, s, inp, false, false);
-  s.gx = p.s.x + HW / 2; s.gy = p.s.y + HH / 2;
-  const shy = L.def.traps.some(t => t.k === 'shy');
-  if (shy && L.door.length > 1) {
-    const [c, r] = L.door[s.dIdx];
-    const d = Math.hypot(s.gx - (c * T + 9), s.gy - (r * T - 4));
-    s.dLock = d < 30 ? s.dLock + 1 : 0;
-    if (s.dLock >= 2 && s.dCool <= 0) {
-      s.dIdx = (s.dIdx + 1) % L.door.length; s.dLock = 0; s.dCool = 150; ev?.push('hop');
-    }
-  }
+/** The shy door watches the REAL hero: get close and it hops to its next spot (then it ignores you for a moment). */
+export const SHY_RADIUS = 48, SHY_TICKS = 2, SHY_COOLDOWN = 70;
+function shyDoor(L: Compiled, s: State, ev: Ev) {
+  if (s.dIdx >= L.door.length - 1) return; // the last spot is the real one: it stays put
+  const [c, r] = L.door[s.dIdx];
+  const d = Math.hypot(s.x + HW / 2 - (c * T + 9), s.y + HH / 2 - r * T);
+  s.dLock = d < SHY_RADIUS ? s.dLock + 1 : 0;
+  if (s.dLock >= SHY_TICKS && s.dCool <= 0) { s.dIdx++; s.dLock = 0; s.dCool = SHY_COOLDOWN; ev?.push('hop'); }
 }
 
 export function step(L: Compiled, s: State, inp: number, ev?: Ev) {
   if (s.dead || s.won) return;
-  if (L.reactive && !s.frozen && s.tick % GHOST_EVERY === 0) refreshGhost(L, s, inp, ev);
+  shyDoor(L, s, ev);
   if (s.dCool > 0) s.dCool--;
   const tr = L.def.traps, hcx = s.x + HW / 2;
 
@@ -160,10 +139,11 @@ export function step(L: Compiled, s: State, inp: number, ev?: Ev) {
     else if (d.k === 'stalker') {
       const lo = d.c0 * T + 9, hi = d.c1 * T + 9;
       if (q.m === 0) {
-        const tx = Math.max(lo, Math.min(hi, s.gx)), dx = tx - q.x;
-        if (Math.abs(dx) > 2.6) q.x += Math.sign(dx) * 2.6; else q.x = tx;
-        if (Math.abs(tx - q.x) < 3 && Math.abs(s.gx - q.x) < 8) q.t++; else q.t = Math.max(0, q.t - 2);
-        if (q.t >= 10) { q.m = 1; q.vy = 0; ev?.push('stalkSlam'); }
+        // chases where the hero actually is (a little ahead if running); slams down once it is lined up above you
+        const tx = Math.max(lo, Math.min(hi, hcx + s.vx * STALK_LEAD)), dx = tx - q.x;
+        if (Math.abs(dx) > STALK_SPEED) q.x += Math.sign(dx) * STALK_SPEED; else q.x = tx;
+        if (Math.abs(tx - q.x) < 3 && Math.abs(hcx - q.x) < STALK_NEAR) q.t++; else q.t = Math.max(0, q.t - 2);
+        if (q.t >= STALK_TICKS) { q.m = 1; q.vy = 0; ev?.push('stalkSlam'); }
       } else if (q.m === 1) {
         q.vy = Math.min(q.vy + 0.7, 9); q.y += q.vy;
         const gy = groundBelow(L, q.x, d.r * T + 12);
@@ -229,4 +209,3 @@ export function step(L: Compiled, s: State, inp: number, ev?: Ev) {
   s.tick++;
 }
 
-export function hasStalkerAny(L: Compiled) { return L.reactive; }

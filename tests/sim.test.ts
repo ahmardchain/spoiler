@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LEVELS } from '../src/levels';
-import { compile, initState, step, predict, clone, COLS, ROWS, HORIZON, RIGHT, JUMP } from '../src/sim';
+import { compile, initState, step, clone, COLS, ROWS, T, HW, HH, RIGHT, JUMP } from '../src/sim';
 import { replay, type RLE } from '../src/bot';
 import solutions from '../src/solutions.json';
 
@@ -44,46 +44,46 @@ describe('determinism', () => {
   });
 });
 
-describe('the SPOILER preview', () => {
-  // On levels without reactive traps the preview must be exactly what happens when you keep holding the same keys.
-  it.each([0, 1, 2, 3, 4, 7, 8, 11].filter(i => !compile(LEVELS[i]).reactive))('level %i: preview matches reality while inputs are held', (i) => {
-    const L = compile(LEVELS[i]);
-    for (const inp of [0, RIGHT, RIGHT | JUMP]) {
-      const s = initState(L);
-      for (let k = 0; k < 40; k++) step(L, s, RIGHT);          // get somewhere interesting first
-      if (s.dead || s.won) continue;
-      const p = predict(L, s, inp, false, false);
-      const real = clone(s); let t = 0;
-      for (; t < HORIZON && !real.dead && !real.won; t++) step(L, real, inp);
-      expect(p.res).toBe(real.dead ? 1 : real.won ? 2 : 0);
-      expect(p.s.x).toBeCloseTo(real.x, 6); expect(p.s.y).toBeCloseTo(real.y, 6);
-    }
-  });
-  it('predicts a death on level 1 before it happens when running at the spikes', () => {
-    const L = compile(LEVELS[0]), s = initState(L);
-    for (let k = 0; k < 20; k++) step(L, s, RIGHT);
-    const p = predict(L, s, RIGHT, true, true);
-    expect(p.res).toBe(1);
-    expect(p.path && p.path.length).toBeGreaterThan(4);
-    expect(run(0, RIGHT, 1200).dead).toBe(true);
-  });
-  it('does not mutate the real state', () => {
-    const L = compile(LEVELS[5]), s = initState(L), before = JSON.stringify(s);
-    predict(L, s, RIGHT, true, true);
-    expect(JSON.stringify(s)).toBe(before);
+describe('the game has no preview or guide', () => {
+  it('levels carry no tutorial text', () => { for (const l of LEVELS) expect(Object.keys(l).sort()).toEqual(['map', 'name', 'traps']); });
+  it('the sim does not read the future: stepping never touches a ghost position', () => {
+    const L = compile(LEVELS[5]), s = initState(L); expect('gx' in s).toBe(false); expect('frozen' in s).toBe(false); expect('reactive' in L).toBe(false);
   });
 });
 
-describe('reactive traps', () => {
-  it('the shy door hops away while you approach it (replaying the solution)', () => {
-    for (const lv of [7, 10]) {
+describe('reactive traps follow the real hero', () => {
+  // level 6: a stalker patrols above a ground strip; level 7: a door that hops
+  const groundY = (L: ReturnType<typeof compile>, c: number) => { let r = 0; while (!L.solid[r * COLS + c]) r++; return r * T - HH; };
+  it('the stalker slams down on a hero who stands under it', () => {
+    const L = compile(LEVELS[5]), s = initState(L); s.x = 15 * T + 9 - HW / 2; s.y = groundY(L, 15);
+    for (let t = 0; t < 200 && !s.dead; t++) step(L, s, 0);
+    expect(s.dead).toBe(true); expect(s.cause).toBe('stalker');
+  });
+  it('the stalker slides along its rail toward the real hero', () => {
+    const L = compile(LEVELS[5]), s = initState(L); s.x = 24 * T; s.y = groundY(L, 24);
+    const ts = L.def.traps.findIndex(t => t.k === 'stalker'), x0 = s.ts[ts].x;
+    for (let t = 0; t < 40; t++) step(L, s, 0);
+    expect(s.ts[ts].x).toBeGreaterThan(x0 + 30);
+  });
+  it('the stalker ignores a hero who is far away', () => {
+    const L = compile(LEVELS[5]), s = initState(L);
+    for (let t = 0; t < 600 && !s.dead; t++) step(L, s, 0);
+    expect(s.dead).toBe(false);
+  });
+  it('the shy door hops when the hero gets close, but not before', () => {
+    const L = compile(LEVELS[6]), s = initState(L);
+    for (let t = 0; t < 200; t++) step(L, s, 0);
+    expect(s.dIdx).toBe(0);
+    const [c, r] = L.door[0]; s.x = c * T - 18; s.y = r * T - HH + T; s.vx = 0; const ev: string[] = [];
+    for (let t = 0; t < 10; t++) step(L, s, 0, ev);
+    expect(ev).toContain('hop'); expect(s.dIdx).toBe(1);
+  });
+  it('the shy door hops while you approach it (replaying the solutions)', () => {
+    for (const lv of [7, 10, 14]) {
       const L = compile(LEVELS[lv - 1]), s = initState(L); let hops = 0;
       for (const [inp, n] of sols[String(lv)]) for (let k = 0; k < n && !s.dead && !s.won; k++) { const ev: string[] = []; step(L, s, inp, ev); hops += ev.filter(e => e === 'hop').length; }
       expect(s.won).toBe(true);
       expect(hops, 'level ' + lv).toBeGreaterThan(0);
     }
-  });
-  it('a stalker stays idle when you are predicted to stand still far away', () => {
-    const s = run(5, 0, 300); expect(s.dead).toBe(false);
   });
 });

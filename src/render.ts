@@ -80,11 +80,10 @@ export function drawWorld(g: CanvasRenderingContext2D, L: Compiled, s: State, o:
   const tr = L.def.traps, t = o.time;
   // door(s)
   const [dc, dr] = L.door[s.dIdx];
-  if (o.showAlts !== false) for (let i = 0; i < L.door.length; i++) if (i !== s.dIdx) {
+  if (o.showAlts === true) for (let i = 0; i < L.door.length; i++) if (i !== s.dIdx) {
     const [c, r] = L.door[i]; g.save(); g.globalAlpha = 0.28 + 0.1 * Math.sin(t * 4); g.setLineDash([3, 3]); g.strokeStyle = '#fff'; g.lineWidth = 1; g.strokeRect(c * T + 3.5, (r - 1) * T + 2.5, 11, 33); g.restore();
   }
   tile(g, 130, dc * T, (dr - 1) * T); tile(g, 150, dc * T, dr * T);
-  if (L.door.length > 1) { g.save(); g.globalAlpha = 0.9; g.fillStyle = '#ffd24a'; g.fillRect(dc * T + 6, (dr - 1) * T - 6 + Math.sin(t * 6) * 1.5, 6, 2); g.restore(); }
 
   for (let i = 0; i < tr.length; i++) {
     const d = tr[i], q = s.ts[i];

@@ -13,15 +13,15 @@ const play = (n, rle) => p.evaluate(async ([n, rle]) => {
   while (performance.now() - t0 < 16000) { await new Promise(r => setTimeout(r, 40)); if (S.game.s.won) return performance.now() - t0; }
   return -1;
 }, [n, rle]);
-const shot = async (name, ms) => { await p.waitForTimeout(ms); await p.screenshot({ path: `shots/${name}.png` }); };
+const shot = async (name, ms) => { await p.waitForTimeout(ms); await p.screenshot({ path: `clip/${name}.png` }); };
 const start = (Date.now() - T0) / 1000; console.log('trim start', start.toFixed(2));
-// A: level 1 - run straight at the spikes (the corner window predicts the death), die, respawn, then dodge them
-const a = play(1, [[2, 101], ...sols[1]]); await shot('01-predicted-death', 1100); await a; await p.waitForTimeout(600);
-// B: level 6 - the stalker slams down where the window says you will be: panic, then beat it
-const b6 = play(6, [[2, 77], ...sols[6]]); await shot('02-stalker-predicted', 1200); await b6; await p.waitForTimeout(600);
-// C: level 7 - the door runs away from the future where you reach it
-const c = play(7, sols[7]); await shot('03-shy-door', 2600); await c; await p.waitForTimeout(500);
-// D: finale-ish level 14 for the screenshot set
-const d = play(14, sols[14]); await shot('04-spoiler-alert', 2500); await d; await p.waitForTimeout(700);
+// A: level 1 - run straight at the spikes, die, respawn, then do it properly (the ceiling block tries to get you too)
+const a = play(1, [[2, 101], ...sols[1]]); await a; await p.waitForTimeout(400);
+// B: level 6 - the stalker follows you; hesitate under it and it drops. Then run for real.
+const b6 = play(6, [[2, 60], [0, 50], ...sols[6]]); await shot('rec-stalker', 1900); await b6; await p.waitForTimeout(400);
+// C: level 7 - the door hops away when you get close
+const c = play(7, sols[7]); await shot('rec-shy-door', 2600); await c; await p.waitForTimeout(400);
+// D: level 14 finale
+const d = play(14, sols[14]); await d; await p.waitForTimeout(700);
 console.log('total', ((Date.now() - T0) / 1000).toFixed(2));
 await ctx.close(); await b.close();
