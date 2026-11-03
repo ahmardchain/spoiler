@@ -1,0 +1,6 @@
+node_modules
+dist
+_dl
+clip/raw
+*.log
+.DS_Store

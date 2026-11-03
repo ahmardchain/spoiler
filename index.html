@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SPOILER — see your death before it happens</title>
+<meta name="description" content="A troll-platformer where a live window shows your next 1.5 seconds. Made for the Loadout AI Game Competition.">
+<meta property="og:title" content="SPOILER"><meta property="og:description" content="See your death before it happens. 14 levels. A live window shows the next 1.5 seconds.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23120d24'/><rect x='3' y='3' width='10' height='10' fill='%233ddc84'/></svg>">
+<link rel="preload" href="./assets/PressStart2P-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<style>
+@font-face { font-family: 'Press Start 2P'; src: url('./assets/PressStart2P-Regular.ttf') format('truetype'); font-display: block; }
+html, body { margin: 0; height: 100%; background: #0b0818; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; font-family: 'Press Start 2P', monospace; }
+#wrap { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#c { width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: #120d24; }
+body.touch #c { width: min(100vw, calc((100vh - 120px) * 16 / 9)); }
+#loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; background: #120d24; }
+#pad { display: none; width: 100%; max-width: 640px; height: 110px; justify-content: space-between; align-items: center; padding: 0 12px; box-sizing: border-box; }
+body.touch #pad { display: flex; }
+.btn { width: 84px; height: 84px; border-radius: 16px; background: #2d2260; border: 3px solid #5a48b8; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; touch-action: none; }
+.btn.on { background: #5a48b8; }
+#b-jump { width: 120px; background: #5a2060; border-color: #b848b8; } #b-jump.on { background: #b848b8; }
+.grp { display: flex; gap: 12px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="768" height="432"></canvas>
+  <div id="pad"><div class="grp"><div class="btn" id="b-left">&lt;</div><div class="btn" id="b-right">&gt;</div></div><div class="btn" id="b-jump">JUMP</div></div>
+</div>
+<div id="loading">LOADING...</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
