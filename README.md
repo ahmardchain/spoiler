@@ -7,6 +7,8 @@ A tiny, brutal platformer made for the **Loadout AI Game Competition 2026**. A p
 Then the traps start reading it too. The stalker slams down where the window says you'll be. The door runs away from the future where you reach it. Fool the future.
 
 ## Play
+**Live: https://ahmardchain.github.io/spoiler/**
+
 - **Move:** arrows / WASD. **Jump:** Space / Up / Z (hold to bounce). **R** restart, **Esc** level select, **M** mute. Touch buttons appear on phones.
 - 14 single-screen levels, 5-15 seconds each, instant respawn, progress saved in `localStorage`.
 
