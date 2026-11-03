@@ -2,7 +2,7 @@
 
 Live game: https://ahmardchain.github.io/spoiler/
 Repo: https://github.com/ahmardchain/spoiler
-Clip: clip/spoiler-clip.mp4 (~26 s, 1920x1080; scripted/bot-driven inputs, real game rendering)
+Clip: clip/spoiler-clip.mp4 (~25 s, 1920x1080 @ 60 fps, with game music + SFX at ~-14 LUFS; scripted/bot-driven inputs, real game rendering)
 
 > **NEEDS A DECISION BEFORE ANY POST OR SUBMISSION:** the original pitch (a live window that shows your death 1.5 s early) was REMOVED at Ahmard's request. The name "SPOILER" no longer matches the game and the texts below are re-drafted for the new, simpler troll-platformer. Rename or confirm the name, then re-read them.
 >

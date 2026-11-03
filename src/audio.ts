@@ -2,6 +2,8 @@
 let ctx: AudioContext | null = null, master: GainNode | null = null;
 let muted = localStorage.getItem('spoiler.mute') === '1';
 let music: HTMLAudioElement | null = null, musicName = '';
+let off = 0; // start-time offset (seconds): used by renderSfx() to lay events out on an offline timeline
+export const sfxLog: [number, string][] = []; // [Date.now(), name] of every SFX the game triggered (used by the clip recorder)
 const base = import.meta.env.BASE_URL;
 
 export function unlock() {
@@ -26,14 +28,14 @@ export function playMusic(name: 'title' | 'game') {
 }
 
 function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol = 0.3, delay = 0) {
-  if (!ctx || !master) return; const t = ctx.currentTime + delay;
+  if (!ctx || !master) return; const t = ctx.currentTime + delay + off;
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
   o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
 }
 function noise(dur: number, vol = 0.3, lp = 4000, delay = 0, lp1 = lp) {
-  if (!ctx || !master) return; const t = ctx.currentTime + delay;
+  if (!ctx || !master) return; const t = ctx.currentTime + delay + off;
   const n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
   const s = ctx.createBufferSource(); s.buffer = buf;
@@ -57,4 +59,13 @@ export const sfx: Record<string, () => void> = {
   click: () => tone('square', 520, 520, 0.05, 0.1),
   select: () => { tone('square', 440, 440, 0.06, 0.12); tone('square', 880, 880, 0.1, 0.12, 0.06); },
 };
-export function play(name: string) { if (!muted) sfx[name]?.(); }
+export function play(name: string) { if (sfxLog.length < 5000) sfxLog.push([Date.now(), name]); if (!muted) sfx[name]?.(); }
+
+/** Renders SFX events [seconds, name] with the very same synth into a mono Float32Array (for the demo clip's soundtrack). */
+export async function renderSfx(events: [number, string][], seconds: number, rate = 44100): Promise<Float32Array> {
+  const keepCtx = ctx, keepMaster = master, keepOff = off;
+  const oc = new OfflineAudioContext(1, Math.ceil(seconds * rate), rate), g = oc.createGain(); g.gain.value = 0.5; g.connect(oc.destination);
+  ctx = oc as unknown as AudioContext; master = g;
+  try { for (const [t, name] of events) { off = t; sfx[name]?.(); } return (await oc.startRendering()).getChannelData(0); }
+  finally { ctx = keepCtx; master = keepMaster; off = keepOff; }
+}

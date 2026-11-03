@@ -9,7 +9,7 @@ Made for the **Loadout AI Game Competition 2026**. The level fills your whole sc
 ## Play
 **Live: https://ahmardchain.github.io/spoiler/**
 
-- **Move:** arrows / WASD. **Jump:** Space / Up / Z (hold to bounce). **R** restart, **Esc** level select, **M** mute, **F** fullscreen (or the small fullscreen icon). The level scales to fill the window, pixel-crisp at any size; on tall phones it zooms in and follows the hero. Semi-transparent touch buttons appear on phones.
+- **Move:** arrows / WASD. **Jump:** Space / Up / Z (hold to bounce). **R** restart, **Esc** level select, **M** mute, **F** fullscreen (or the small fullscreen icon). The camera is zoomed in (hero ≈ 9% of screen height at 1080p) and follows the hero with look-ahead, pixel-crisp at any size. Semi-transparent touch buttons appear on phones.
 - 14 single-screen levels, 3-8 seconds each, instant respawn, progress saved in `localStorage`.
 
 ## How it works

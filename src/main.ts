@@ -20,7 +20,7 @@ async function boot() {
   game.start();
   // Hooks for the Playwright demo recorder and for debugging.
   (window as any).__spoiler = {
-    game, LEVELS, compile, initState, step, setInput: setOverride,
+    game, LEVELS, audio, compile, initState, step, setInput: setOverride,
     run(seq: [number, number][], done?: () => void) { const a: number[] = []; for (const [i, n] of seq) for (let k = 0; k < n; k++) a.push(i); game.script = a; game.scriptPos = 0; game.scriptDone = done ?? null; },
     start: (i: number) => game.startLevel(i),
   };

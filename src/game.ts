@@ -24,7 +24,7 @@ export function toggleFullscreen() {
 export class Game {
   g: CanvasRenderingContext2D; mode: Mode = 'title'; save = load();
   li = 0; L!: Compiled; s!: State; levelDeaths = 0; levelTicks = 0;
-  camX = 0; camSet = false;
+  camX = 0; camY = 0; look = 1; camSet = false;
   shake = 0; flash = 0; flashColor = '#fff'; parts: Particle[] = []; squash = 0;
   deadTimer = 0; winTimer = 0; time = 0; acc = 0; last = 0; selIdx = 0; titleT = 0;
   script: number[] | null = null; scriptPos = 0; scriptDone: (() => void) | null = null;
@@ -73,7 +73,7 @@ export class Game {
     this.mode = 'play'; this.levelDeaths = 0; this.levelTicks = 0; this.parts = []; this.deadTimer = 0; this.winTimer = 0; this.camSet = false;
     this.save.last = this.li; this.persist(); audio.playMusic('game');
   }
-  respawn() { this.s = initState(this.L); this.deadTimer = 0; this.levelTicks = 0; }
+  respawn() { this.camSet = false; this.s = initState(this.L); this.deadTimer = 0; this.levelTicks = 0; }
   persist() { try { localStorage.setItem('spoiler.save', JSON.stringify(this.save)); } catch { /* private mode */ } }
 
   onKey(code: string) {
@@ -180,13 +180,13 @@ export class Game {
   }
 
   drawTitle() {
-    const g = this.g, l = this.lay, { cw, ch, U } = l, t = this.titleT / 60, cx = cw / 2;
+    const g = this.g, l = this.lay, { cw, ch } = l, t = this.titleT / 60, cx = cw / 2;
     this.backdrop(1, 0.5);
-    const ts = Math.min(cw * 0.86 / 7, ch * 0.24), ty = ch * 0.27 + Math.sin(t * 2) * ts * 0.04;
+    const ts = Math.min(cw * 0.94 / 7, ch * 0.3), ty = ch * 0.2 + Math.sin(t * 2) * ts * 0.04;
     g.save(); g.globalAlpha = 0.4; text(g, 'SPOILER', cx + ts * 0.14 + Math.sin(t * 3) * ts * 0.04, ty, ts, '#7a5cff', 'center', ''); g.restore();
     text(g, 'SPOILER', cx, ty, ts, '#ffffff', 'center', '#ff3d6a');
     // play button (the whole screen is a button too)
-    const ps = Math.round(Math.min(ts * 0.5, cw * 0.1, 56 * Math.max(1, U))), bw = ps * 4 + ps * 1.6, bh = ps * 2.4, bx = cx - bw / 2, by = ch * 0.62;
+    const ps = Math.round(Math.min(cw * 0.76, ch * 0.62) / 5.6), bw = ps * 4 + ps * 1.6, bh = ps * 2.4, bx = cx - bw / 2, by = ch * 0.56;
     const pulse = 1 + Math.sin(t * 5) * 0.025; g.save(); g.translate(cx, by + bh / 2); g.scale(pulse, pulse); g.translate(-cx, -(by + bh / 2));
     g.fillStyle = '#5b2d9e'; g.fillRect(bx, by, bw, bh); const bd = Math.max(3, ps * 0.14); g.strokeStyle = '#ffd24a'; g.lineWidth = bd; g.strokeRect(bx + bd / 2, by + bd / 2, bw - bd, bh - bd);
     text(g, 'PLAY', cx, by + (bh - ps) / 2, ps, '#fff', 'center'); g.restore();
@@ -212,24 +212,30 @@ export class Game {
     if (this.titleT % 6 === 0) this.parts.push({ x: Math.random() * W, y: -4, vx: (Math.random() - .5), vy: 1 + Math.random() * 2, life: 200, max: 200, c: ['#ffd24a', '#ff7ac8', '#7ad7ff', '#fff'][(Math.random() * 4) | 0], s: 3 });
   }
 
+  /** Camera: always zoomed in on the hero. Looks ahead in the direction of travel, hero sits low on screen so the trap overhead stays visible, clamped to the level. */
+  updateCamera() {
+    const l = this.lay, s = this.s, hx = s.x + HW / 2, hy = s.y + HH / 2;
+    const dirT = s.face >= 0 ? 1 : -1; this.look += (dirT - this.look) * 0.05;
+    const ahead = l.visW * 0.2 * this.look + s.vx * 6;
+    let wx = hx + ahead - l.visW / 2, wy = hy - l.visH * l.heroY + Math.max(0, s.vy) * 7;
+    wx = Math.max(0, Math.min(W - l.visW, wx)); wy = Math.max(0, Math.min(H - l.visH + l.padB, wy));
+    if (!this.camSet) { this.camX = wx; this.camY = wy; this.camSet = true; this.look = dirT; }
+    else { this.camX += (wx - this.camX) * 0.1; this.camY += (wy - this.camY) * 0.12; }
+  }
+
   drawPlay() {
-    const g = this.g, s = this.s, L = this.L, l = this.lay, world = worldOf(this.li), v = l.view, sc = l.s;
-    this.backdrop(world, 0.84);
-    // camera: the whole level when it fits; otherwise zoomed in, following the hero horizontally
-    let ox = 0;
-    if (l.follow) {
-      const want = Math.max(0, Math.min(W - l.visW, s.x + HW / 2 + s.face * 22 - l.visW / 2));
-      if (!this.camSet) { this.camX = want; this.camSet = true; } else this.camX += (want - this.camX) * 0.14;
-      ox = this.camX;
-    }
-    const sh = this.shake * sc, tx = Math.round((v.x - ox * sc) * l.dpr) / l.dpr, ty = v.y;
-    g.save(); g.beginPath(); g.rect(v.x, v.y, v.w, v.h); g.clip();
+    const g = this.g, s = this.s, L = this.L, l = this.lay, world = worldOf(this.li), sc = l.s;
+    this.updateCamera();
+    const sh = this.shake * sc;
+    const tx = Math.round(-this.camX * sc * l.dpr) / l.dpr, ty = Math.round(-this.camY * sc * l.dpr) / l.dpr;
+    g.save(); g.beginPath(); g.rect(0, 0, l.cw, l.ch); g.clip();
     g.translate(tx + (Math.random() - 0.5) * sh * 2, ty + (Math.random() - 0.5) * sh * 2); g.scale(sc, sc); g.imageSmoothingEnabled = false;
+    if (l.padB > 0) { g.fillStyle = '#2b2440'; g.fillRect(-4, H - 1, W + 8, l.padB + 8); }
     drawWorld(g, L, s, { world, time: this.time, hero: !s.dead, squash: this.squash });
     for (const p of this.parts) { g.globalAlpha = Math.min(1, p.life / 15); g.fillStyle = p.c; g.fillRect(p.x, p.y, p.s, p.s); } g.globalAlpha = 1;
     g.restore();
-    if (this.flash > 0) { g.save(); g.globalAlpha = this.flash * 0.5; g.fillStyle = this.flashColor; g.fillRect(v.x, v.y, v.w, v.h); g.restore(); }
-    // minimal HUD: level number + deaths, small, top-left
+    if (this.flash > 0) { g.save(); g.globalAlpha = this.flash * 0.5; g.fillStyle = this.flashColor; g.fillRect(0, 0, l.cw, l.ch); g.restore(); }
+    // minimal HUD: level number + deaths, top-left
     const hs = l.fsz.hud, m = l.m;
     text(g, `LV ${this.li + 1}`, m, m, hs, '#fff'); text(g, `DEATHS ${this.save.deaths}`, m, m + hs * 1.6, hs, '#ff9db0');
   }

@@ -87,3 +87,21 @@ describe('reactive traps follow the real hero', () => {
     }
   });
 });
+
+import { computeLayout } from '../src/layout';
+import { HH as HERO_H, W as LW, H as LH } from '../src/sim';
+describe('big, crisp, camera-following view', () => {
+  it('hero is 8-10% of the screen height at 1920x1080 and the view is pixel-crisp', () => {
+    const l = computeLayout(1920, 1080, 1, false);
+    const frac = HERO_H * l.s / 1080; expect(frac).toBeGreaterThanOrEqual(0.08); expect(frac).toBeLessThanOrEqual(0.1);
+    expect(Number.isInteger(l.s * l.dpr)).toBe(true);
+  });
+  it('always covers the whole screen (camera never shows outside the level) and zooms in on every size', () => {
+    for (const [w, h, d] of [[1920, 1080, 1], [1366, 768, 1], [2560, 1440, 1], [390, 844, 3], [844, 390, 3], [360, 800, 3], [768, 1024, 2], [3440, 1440, 1]] as const) {
+      const l = computeLayout(w, h, d, true);
+      expect(l.s * LW).toBeGreaterThanOrEqual(w - 0.01); expect(l.s * LH).toBeGreaterThanOrEqual(h - 0.01);
+      expect(l.visW).toBeGreaterThanOrEqual(130); expect(l.s).toBeGreaterThanOrEqual(w / LW);
+      expect(Number.isInteger(Math.round(l.s * l.dpr * 1000) / 1000)).toBe(true);
+    }
+  });
+});

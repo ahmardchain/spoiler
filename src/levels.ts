@@ -48,7 +48,7 @@ export const LEVELS: LevelDef[] = [
   ]),
 
   lvl('IT SEES YOU', new G().f(0, 9).f(13, 18).f(22, 31).p(2, 15, 'S').p(29, 15, 'E'), [
-    { k: 'stalker', c: 15, r: 4, c0: 5, c1: 26 },
+    { k: 'stalker', c: 15, r: 8, c0: 5, c1: 26 },
   ]),
 
   lvl('SHY DOOR', new G().f(0, 31).p(2, 15, 'S').f(18, 20, 14, 15).f(21, 23, 12, 15).f(24, 27, 10, 15).p(26, 9, 'E'), [
@@ -73,13 +73,13 @@ export const LEVELS: LevelDef[] = [
   ], 2),
 
   lvl('TWO EYES', new G().f(0, 9).f(13, 14).f(18, 31).p(2, 15, 'S').p(29, 15, 'E'), [
-    { k: 'stalker', c: 8, r: 4, c0: 4, c1: 15 }, { k: 'stalker', c: 22, r: 4, c0: 15, c1: 27 },
+    { k: 'stalker', c: 8, r: 8, c0: 4, c1: 15 }, { k: 'stalker', c: 22, r: 8, c0: 15, c1: 27 },
   ]),
 
   lvl('PIT STOP', new G().f(0, 4).f(27, 31).p(2, 15, 'S').p(29, 15, 'E'), [
     { k: 'crumble', c: 6, r: 15, n: 2 }, { k: 'crumble', c: 10, r: 14, n: 2 }, { k: 'crumble', c: 14, r: 13, n: 2 },
     { k: 'crumble', c: 18, r: 14, n: 2 }, { k: 'crumble', c: 22, r: 15, n: 2 },
-    { k: 'stalker', c: 14, r: 4, c0: 5, c1: 26 },
+    { k: 'stalker', c: 14, r: 7, c0: 5, c1: 26 },
     { k: 'saw', x0: 12, y0: 8, x1: 12, y1: 15, speed: 1.3, phase: 20 },
   ]),
 
@@ -88,12 +88,12 @@ export const LEVELS: LevelDef[] = [
     { k: 'saw', x0: 11, y0: 15.5, x1: 15, y1: 15.5, speed: 1.6, phase: 0 },
     { k: 'drop', c: 18, r: 8, trig: 14 },
     { k: 'pop', c: 21, r: 15, period: 120, phase: 0, up: 60 }, { k: 'pop', c: 24, r: 15, period: 120, phase: 60, up: 60 },
-    { k: 'stalker', c: 14, r: 5, c0: 4, c1: 27 },
+    { k: 'stalker', c: 14, r: 8, c0: 4, c1: 27 },
   ]),
 
   lvl('FINALE', new G().f(0, 31).p(2, 15, 'S').f(7, 8, 14, 15).f(9, 11, 12, 15).f(15, 18, 10, 15).p(10, 11, 'E'), [
     { k: 'shy', alts: [[17, 9], [29, 15]] },
-    { k: 'stalker', c: 12, r: 3, c0: 4, c1: 27 },
+    { k: 'stalker', c: 12, r: 6, c0: 4, c1: 27 },
     { k: 'pop', c: 4, r: 15, period: 110, phase: 0, up: 50 },
     { k: 'saw', x0: 13, y0: 9, x1: 13, y1: 15.5, speed: 1.3, phase: 0 },
   ], 2),
